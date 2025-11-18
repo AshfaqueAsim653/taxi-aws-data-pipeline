@@ -324,12 +324,11 @@ The Taxi AWS Data Pipeline consists of:
 
 ## Tools & Technologies
 
-- **Containerization:** Docker, Docker Compose  
+- **Containerization:** Docker
 - **Orchestration:** Prefect  
 - **Storage:** AWS S3 (raw and processed buckets)  
-- **Languages:** Python, SQL (optional for processing/validation)  
+- **Languages:** Python
 - **Logging & Monitoring:** Python logging + Prefect UI  
-- **Testing:** Unit tests for transformation functions (Pytest)  
 
 ---
 
