@@ -338,7 +338,6 @@ The Taxi AWS Data Pipeline consists of:
 - **Hourly incremental:** Processes new data every hour  
 - **Manual run:** Triggered on-demand to reprocess data  
 
-**Prefect UI:** [http://prefect-server:4200](http://prefect-server:4200)
 
 ---
 
