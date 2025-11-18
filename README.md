@@ -15,7 +15,8 @@ To make the pipeline robust and production-ready:
 - **Orchestration** is done using Prefect flows  
 - **Containerized** with Docker and managed via Docker Compose  
 - **Incremental and manual flow runs** supported for flexibility  
-- Logging implemented for monitoring pipeline health and process status  
+- Logging implemented for monitoring pipeline health and process status
+- **Watermarking** used to avoid re-processing of old data
 
 ---
 
