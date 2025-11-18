@@ -1,0 +1,8 @@
+# Environment files
+.env
+
+# Prefect ignore
+.prefectignore
+
+# Virtual environment
+venv/

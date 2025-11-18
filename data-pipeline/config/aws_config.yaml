@@ -1,0 +1,66 @@
+# AWS Configuration for NYC Taxi Data Pipeline
+
+# S3 Data Lake Configuration
+s3_bucket_name: "taxiawsbucket"
+aws_region: "ap-south-1"
+
+# S3 Bucket Structure (matches your actual S3 structure)
+bucket_structure:
+  raw_data: "raw-data/"
+  processed_data: "processed/"
+  metrics_data: "processed/metrics/"
+  metadata: "processed/_metadata/"
+  # backups: "backups/"  # Optional for future use
+
+# Data Types and Patterns
+data_types:
+  raw_taxi_data:
+    pattern: "yellow_tripdata_*.parquet"
+    description: "NYC Yellow Taxi trip records"
+    source: "NYC TLC"
+  
+  processed_taxi_data:
+    pattern: "taxi/*/combined.parquet"
+    description: "Cleaned and transformed taxi data"
+  
+  business_metrics:
+    pattern: "metrics/*/*.csv"
+    description: "Business metrics and analytics"
+
+# Data Partitioning Strategy
+partitioning:
+  by_date: true
+  date_format: "date=%Y-%m"  # Matches your YYYY-MM filename pattern
+  metrics_partitioning: "date=*"  # Your current metrics structure
+
+# File Formats (based on your actual usage)
+file_formats:
+  raw: ["parquet"]
+  processed: ["parquet"]
+  metrics: ["csv"]
+
+# Data Retention Policy (days)
+retention_policy:
+  raw_data: 365    # Keep raw data for 1 year
+  processed_data: 730  # Keep processed data for 2 years
+  metrics_data: 1095   # Keep metrics for 3 years
+  metadata: 1095       # Keep metadata indefinitely
+
+# Watermark Configuration (from your code)
+watermark:
+  enabled: true
+  key: "processed/_metadata/last_processed_watermark.txt"
+  processed_tracker: "processed/_metadata/processed_files.json"
+
+# Processing Configuration (from your environment variables)
+processing:
+  max_files_per_run: 10
+  processing_batch_size: 2
+  incremental_processing: true
+
+# Encryption and Security
+security:
+  encryption_at_rest: true
+  encryption_in_transit: true
+  access_logging: true
+  versioning: true  # Good practice for data pipelines

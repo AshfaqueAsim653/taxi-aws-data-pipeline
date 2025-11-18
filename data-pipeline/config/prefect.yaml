@@ -1,0 +1,62 @@
+name: Taxi_AWS
+prefect-version: 3.5.0
+
+pull:
+- prefect.deployments.steps.set_working_directory:
+    directory: /app
+
+deployments:
+- name: taxi-incremental-daily
+  version: "1.0.0"
+  tags: ["taxi-data", "incremental", "production"]
+  description: "Daily incremental processing of NYC taxi data"
+  schedule:
+    cron: "0 2 * * *"
+    timezone: UTC
+  flow_name: incremental-taxi-data-processing
+  entrypoint: data-pipeline/src/orchestration/prefect_flows.py:incremental_taxi_data_processing
+  work_pool:
+    name: project-pool
+    work_queue_name: default
+    job_variables:
+      env:
+        PREFECT_API_URL: "http://prefect-server:4200/api"
+        AWS_DEFAULT_REGION: "ap-south-1"
+        AWS_S3_BUCKET_NAME: "taxiawsbucket"
+        MAX_FILES_PER_RUN: "10"
+        PROCESSING_BATCH_SIZE: "2"
+
+- name: taxi-incremental-hourly
+  version: "1.0.0"
+  tags: ["taxi-data", "incremental", "monitoring"]
+  description: "Hourly incremental processing"
+  schedule:
+    cron: "0 * * * *"
+    timezone: UTC
+  flow_name: incremental-taxi-data-processing
+  entrypoint: data-pipeline/src/orchestration/prefect_flows.py:incremental_taxi_data_processing
+  work_pool:
+    name: project-pool
+    work_queue_name: default
+    job_variables:
+      env:
+        PREFECT_API_URL: "http://prefect-server:4200/api"
+        AWS_DEFAULT_REGION: "ap-south-1"
+        AWS_S3_BUCKET_NAME: "taxiawsbucket"
+        MAX_FILES_PER_RUN: "5"
+        PROCESSING_BATCH_SIZE: "1"
+
+- name: taxi-manual-run
+  version: "1.0.0"
+  tags: ["taxi-data", "manual", "testing"]
+  description: "Manual run deployment"
+  flow_name: incremental-taxi-data-processing
+  entrypoint: data-pipeline/src/orchestration/prefect_flows.py:incremental_taxi_data_processing
+  work_pool:
+    name: project-pool
+    work_queue_name: default
+    job_variables:
+      env:
+        PREFECT_API_URL: "http://prefect-server:4200/api"
+        AWS_DEFAULT_REGION: "ap-south-1"
+        AWS_S3_BUCKET_NAME: "taxiawsbucket"
