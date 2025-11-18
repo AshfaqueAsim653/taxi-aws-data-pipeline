@@ -304,27 +304,26 @@ The Taxi AWS Data Pipeline consists of:
 
 **Outcome:** Pipeline is ready for the next incremental run.
 
-### Orchestration
-**Prefect flows** schedule and manage the workflow:  
+---
 
-1. `extract_taxi_data` → Fetch raw files from S3  
-2. `deduplicate_files` → Remove duplicates, keep latest files  
-3. `process_taxi_data` → Transform & aggregate data  
-4. `load_processed_data` → Store results in S3 or local processed directories  
+## Orchestration
 
-Flows include **incremental daily/hourly runs** and a **manual run** option for on-demand execution.  
+**Prefect flows schedule and manage the workflow:**
 
-### Visualization
-Processed data can be analyzed with **Power BI or Jupyter Notebooks** to create KPIs like:  
+- `extract_taxi_data` → Fetch raw files from S3  
+- `deduplicate_files` → Remove duplicates, keep latest files  
+- `process_taxi_data` → Transform & aggregate data  
+- `load_processed_data` → Store results in S3 or local processed directories  
 
-- Daily trip counts  
-- Revenue per day/hour  
-- Average trip distance  
-- Vehicle type distribution  
+**Flow Features:**
+
+- Incremental daily/hourly runs  
+- Manual run option for on-demand execution  
 
 ---
 
 ## Tools & Technologies
+
 - **Containerization:** Docker, Docker Compose  
 - **Orchestration:** Prefect  
 - **Storage:** AWS S3 (raw and processed buckets)  
@@ -335,19 +334,20 @@ Processed data can be analyzed with **Power BI or Jupyter Notebooks** to create 
 ---
 
 ## Prefect Deployments
+
 - **Daily incremental:** Processes only new data each day  
 - **Hourly incremental:** Processes new data every hour  
 - **Manual run:** Triggered on-demand to reprocess data  
 
-Prefect UI: [http://prefect-server:4200](http://prefect-server:4200)
+**Prefect UI:** [http://prefect-server:4200](http://prefect-server:4200)
 
 ---
 
 ## How to Run
+
 ```bash
 # Start Docker services
 docker-compose up -d
 
 # Run manual Prefect deployment
 docker exec -it data-pipeline prefect deployment run 'incremental-taxi-data-processing/taxi-manual-run'
-
