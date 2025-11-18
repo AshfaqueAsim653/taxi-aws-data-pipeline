@@ -263,14 +263,35 @@ The Taxi AWS Data Pipeline consists of:
 
 ---
 
-## 1️⃣5️⃣ Upload Processed Data to S3
+## 1️⃣5️⃣ Upload Data to S3 ✅
 
-**Task:** `upload_processed_taxi_data_versioned`  
+**Processed Data**
 
-- Uploads processed datasets to `processed/taxi/{processing_id}/`  
-- Uploads business metrics to `processed/metrics/date={date_range}/`  
-- Creates “latest” symlinks for easy access  
-- Versioning: Keeps historical versions while maintaining a "latest" view
+- Path: `processed/taxi/{processing_id}/combined.parquet`  
+- Format: Parquet  
+- Partitioning: `by date=%Y-%m` if `partitioning.by_date = true`  
+- S3 Bucket: `taxiawsbucket`  
+- Encryption: Enabled if `security.encryption_at_rest = true`  
+- Versioning: Enabled if `security.versioning = true`  
+
+**Business Metrics**
+
+- Path: `processed/metrics/date={YYYY-MM}/metric_name.csv`  
+- Format: CSV  
+- Partitioning: `metrics_partitioning: date=*`  
+- Bucket: `taxiawsbucket`  
+
+**Metadata Updates**
+
+- `processed/_metadata/processed_files.json`  
+- `processed/_metadata/last_processed_watermark.txt`  
+
+**Retention Policy**
+
+- Raw: 365 days  
+- Processed: 730 days  
+- Metrics: 1095 days  
+- Metadata: Keep indefinitely  
 
 ---
 
