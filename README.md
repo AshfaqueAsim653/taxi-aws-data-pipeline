@@ -51,44 +51,148 @@ Variables extracted:
 ## Project Summary
 The Taxi AWS Data Pipeline consists of:
 
-### Extract
-Python scripts fetch raw CSV/JSON files from AWS S3 and local directories.
+# Incremental Taxi Data Processing Flow
 
-### Load
-Data is loaded into **raw directories** for temporary storage before processing.  
-Subsequent transformations update processed data to maintain **latest version of each file** (deduplication logic).
+## 1️⃣ Flow Entry Point
 
-### Transform
-Applied consistent Schema for all files
+**Prefect Flow:** `incremental_taxi_data_processing`  
+**Purpose:** Orchestrates the full ETL pipeline.  
+**Logging:** Starts with a log: `Starting Incremental Taxi Data Processing Flow...`
 
-**Clean taxi data:**
+---
 
-- **Missing Values:**
-  - Numeric → median
-  - Categorical → mode
-  - Location IDs → 0
+## 2️⃣ Load Configuration & Credentials
 
-- **Fixed Outliers:**
-  - Trip distance: 0–100 miles
-  - Fare amount: 0–500
-  - Passenger count: 1–6
+**Tasks:**
 
-- **Corrected total_amount** to match component sums.
+- `load_aws_credentials` → Loads AWS credentials from environment variables.  
+- `load_configuration` → Loads pipeline settings like:
+  - S3 bucket name (`nyc-tlc-taxi-data`)
+  - Region
+  - Batch size & max files per run  
 
-- **Fixed pickup/dropoff datetime** inconsistencies.
+**Outcome:** You have `aws_creds` and `config` to create the S3 client.
 
-- **Removed invalid records:**
-  - `trip_distance ≤ 0`
-  - `fare ≤ 0`
-  - Missing datetime
+---
 
-### Transform taxi data
+## 3️⃣ Connect to S3
+
+**Code:** `boto3.client(...)`  
+**Purpose:** To list, download, and upload files to S3.
+
+---
+
+## 4️⃣ Fetch Current Pipeline State
+
+**Tasks:**
+
+- `get_processing_watermark` → Gets the last processed timestamp from S3 (`processed/_metadata/last_processed_watermark.txt`).  
+  - If missing → default: `2000-01-01`.
+- `get_processed_files_tracker` → Loads a JSON from S3 tracking already processed files (`processed/_metadata/processed_files.json`).
+
+**Outcome:** You know which files have already been processed and from which point to process new files.
+
+---
+
+## 5️⃣ Discover New Files in S3
+
+**Task:** `find_files_since_watermark`  
+
+- Lists S3 objects under `raw-data/`.
+- Filters files:
+  - Name contains `yellow_tripdata_`
+  - Ends with `.parquet`
+  - Last modified after the watermark
+- Sorts files by `LastModified`.
+
+---
+
+## 6️⃣ Deduplicate Files
+
+**Task:** `deduplicate_files`  
+- If multiple files with the same filename exist, only keep the most recent one.
+
+---
+
+## 7️⃣ Filter Already Processed Files
+
+- Compare deduplicated files with `processed_files`.  
+- Only files not yet processed move forward.
+
+---
+
+## 8️⃣ Load Files Efficiently
+
+**Task:** `load_files_with_memory_optimization`  
+
+- Downloads each S3 file to a temp folder.  
+- Reads parquet using `pyarrow`.  
+- Validates data matches expected year/month from the filename (`validate_data_against_filename`).  
+- Optimizes memory (`optimize_dataframe_memory`):
+  - Converts strings to categories
+  - Downcasts numeric columns  
+
+**Outcome:** Dictionary of `filename -> pd.DataFrame`.
+
+---
+
+## 9️⃣ Combine Datasets
+
+**Task:** `efficient_union_dataframes`  
+
+- Aligns all dataframes to the same schema.  
+- Adds missing columns as `None`.  
+- Concatenates all files into a single dataframe.
+
+---
+
+## 🔟 Apply Consistent Schema
+
+**Task:** `apply_optimized_schema`  
+
+- Enforces explicit types (e.g., `Int8`, `float32`, `datetime64[ns]`, `category`).  
+- Uses `robust_pandas_cast` for safe conversions.  
+
+**Outcome:** A memory-optimized, type-consistent combined dataframe.
+
+---
+
+## 1️⃣1️⃣ Clean Taxi Data
+
+**Task:** `clean_taxi_data`  
+
+**Handles missing values:**
+
+- Numeric → median
+- Categorical → mode
+- Location IDs → 0
+
+**Removes duplicates.**  
+
+**Fixes outliers:**
+
+- Trip distance: 0–100 miles
+- Fare amount: 0–500
+- Passenger count: 1–6
+
+**Other corrections:**
+
+- Corrects `total_amount` to match component sums
+- Fixes pickup/dropoff datetime inconsistencies
+- Removes invalid records (`trip_distance ≤0`, `fare ≤0`, missing datetime)
+
+**Outcome:** Cleaned, reliable dataframe ready for transformation.
+
+---
+
+## 1️⃣2️⃣ Transform Taxi Data
+
+**Task:** `transform_taxi_data`  
 
 **Adds calculated fields:**
 
-- Trip duration
-- Average speed
-- Pickup hour / day / month / year
+- Trip duration, average speed
+- Pickup hour/day/month/year
 - Time of day
 
 **Flags:**
@@ -103,9 +207,53 @@ Applied consistent Schema for all files
 - Tip percentage
 - Valid trip boolean flag
 
+**Outcome:** Transformed dataframe for analytics.
 
-Metrics Generated: Vendor Performance Metrics, Hourly Demand Patterns, Location Analysis, Payment Type Analysis, Monthly Summary.
-Batch processing ensures optimized handling for large datasets.
+---
+
+## 1️⃣3️⃣ Create Business Metrics
+
+**Task:** `create_taxi_metrics`  
+
+- Aggregates processed data into multiple business metrics:
+  - Vendor performance metrics
+  - Hourly demand
+  - Pickup location analysis
+  - Payment type analysis
+  - Monthly summary  
+
+**Outcome:** Dictionary of `metric_name -> pd.DataFrame`.
+
+---
+
+## 1️⃣4️⃣ Generate Processing Info
+
+**Task:** `generate_processing_info_from_filenames`  
+
+- Generates a `processing_id` (timestamped)  
+- Extracts the date range from filenames for S3 partitioning
+
+---
+
+## 1️⃣5️⃣ Upload Processed Data to S3
+
+**Task:** `upload_processed_taxi_data_versioned`  
+
+- Uploads processed datasets to `processed/taxi/{processing_id}/`  
+- Uploads business metrics to `processed/metrics/date={date_range}/`  
+- Creates “latest” symlinks for easy access  
+- Versioning: Keeps historical versions while maintaining a "latest" view
+
+---
+
+## 1️⃣6️⃣ Update Tracker & Watermark
+
+**Tasks:**
+
+- `mark_files_processed` → Adds the processed file keys to the tracker  
+- `update_processing_watermark` → Updates watermark to the latest `LastModified` timestamp among processed files  
+
+**Outcome:** Pipeline is ready for the next incremental run.
 
 ### Orchestration
 **Prefect flows** schedule and manage the workflow:  
