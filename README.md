@@ -95,7 +95,7 @@ The Taxi AWS Data Pipeline consists of:
 
 - `load_aws_credentials` → Loads AWS credentials from environment variables.  
 - `load_configuration` → Loads pipeline settings like:
-  - S3 bucket name (`nyc-tlc-taxi-data`)
+  - S3 bucket name (`taxiawsbucket`)
   - Region
   - Batch size & max files per run  
 
