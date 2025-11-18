@@ -1,65 +1,7 @@
 # Taxi AWS Data Pipeline
 
 ## Architecture
-graph LR
-  subgraph Dev & Orchestration
-    VSCode[VS Code\n(d:\\Taxi_AWS)]
-    PrefectUI[Prefect UI / Server]
-    Agent[Prefect Agent / Worker]
-  end
 
-  subgraph AWS
-    S3Raw[(S3\nraw-data/)]
-    S3Processed[(S3\nprocessed/taxi/ & processed/metrics/)]
-    S3Meta[(S3\nprocessed/_metadata/\nwatermark + processed_files.json)]
-  end
-
-  subgraph Pipeline (Prefect Flow)
-    Flow["incremental-taxi-data-processing"]
-    LoadCreds["Load AWS Credentials"]
-    LoadCfg["Load Configuration"]
-    GetWatermark["Get Processing Watermark"]
-    GetTracker["Get Processed Files Tracker"]
-    Discover["Find Files Since Watermark"]
-    Dedup["Deduplicate Files"]
-    Download["Load Files (memory-optimized)"]
-    Validate["Validate Data vs Filename"]
-    OptimizeMem["Optimize Memory & Apply Schema"]
-    Clean["Clean Taxi Data"]
-    Transform["Transform & Feature Engineering"]
-    Metrics["Create Taxi Metrics"]
-    Upload["Upload Processed Data & Metrics (versioned + latest)"]
-    MarkDone["Mark Files Processed\nUpdate Watermark"]
-  end
-
-  VSCode --> Flow
-  PrefectUI --> Agent
-  Agent --> Flow
-
-  Flow --> LoadCreds
-  Flow --> LoadCfg
-  LoadCreds --> GetWatermark
-  LoadCfg --> GetTracker
-
-  GetWatermark --> Discover
-  GetTracker --> Discover
-  Discover --> S3Raw
-  Discover --> Dedup
-  Dedup --> Download
-  Download --> Validate
-  Validate --> OptimizeMem
-  OptimizeMem --> Clean
-  Clean --> Transform
-  Transform --> Metrics
-  Metrics --> Upload
-  Upload --> S3Processed
-  Upload --> S3Meta
-  Upload --> PrefectUI
-  Upload --> MarkDone
-  MarkDone --> S3Meta
-
-  classDef storage fill:#f3f4f6,stroke:#333,stroke-width:1px;
-  class S3Raw,S3Processed,S3Meta storage;
 
 *Illustration showing Prefect orchestration, Dockerized services, S3 storage, and batch/incremental flows.*
 
