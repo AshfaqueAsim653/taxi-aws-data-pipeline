@@ -263,7 +263,7 @@ The Taxi AWS Data Pipeline consists of:
 
 ---
 
-## 1️⃣5️⃣ Upload Data to S3 ✅
+## 1️⃣5️⃣ Upload Data to S3 
 
 **Processed Data**
 
