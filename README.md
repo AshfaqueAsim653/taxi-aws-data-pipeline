@@ -1,7 +1,8 @@
 # Taxi AWS Data Pipeline
 
 ## Architecture
-![Architecture Diagram](link-to-your-architecture-image)  
+<img width="6810" height="2303" alt="taxiawsArchitecture1" src="https://github.com/user-attachments/assets/0ea1038d-e894-4005-b1d5-ac745120e0a6" />
+
 *Illustration showing Prefect orchestration, Dockerized services, S3 storage, and batch/incremental flows.*
 
 ---
