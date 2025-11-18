@@ -2,6 +2,8 @@
 
 ## Architecture
 
+<img width="1024" height="1536" alt="taxiawsArchitecture5" src="https://github.com/user-attachments/assets/a3d046f2-3947-4fb6-908b-f03e23ea1822" />
+
 
 *Illustration showing Prefect orchestration, Dockerized services, S3 storage, and batch/incremental flows.*
 
