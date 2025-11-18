@@ -6,17 +6,19 @@
 
 ---
 
-## Motivation
-The goal of this project is to gain hands-on experience with modern **data engineering tools** like Python, Docker, Prefect, and AWS S3 by building a fully functional **incremental taxi data pipeline**.
+# Motivation
+
+The goal of this project is to gain hands-on experience with modern data engineering tools such as **Python, Docker, Prefect, and AWS S3** by building a fully functional **incremental taxi data pipeline**.
 
 To make the pipeline robust and production-ready:
 
 - **Data deduplication and batch processing** implemented in Python  
-- **Orchestration** is done using Prefect flows  
+- **Orchestration** done using Prefect flows  
 - **Containerized** with Docker and managed via Docker Compose  
-- **Incremental and manual flow runs** supported for flexibility  
-- Logging implemented for monitoring pipeline health and process status
+- Supports **incremental and manual flow runs** for flexibility  
+- **Logging** implemented for monitoring pipeline health and process status  
 - **Watermarking** used to avoid re-processing old data
+
 
 ---
 
