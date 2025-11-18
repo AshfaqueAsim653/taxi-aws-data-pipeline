@@ -1,6 +1,6 @@
 # Taxi AWS Data Pipeline
 
-## Architecture
+# Architecture
 
 <img width="600" height="900" alt="taxiawsArchitecture6" src="https://github.com/user-attachments/assets/beee7764-32e6-48a7-a57e-a9216c4a31e3" />
 
